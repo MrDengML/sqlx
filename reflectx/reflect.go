@@ -105,7 +105,22 @@ func NewMapperFunc(tagName string, f func(string) string) *Mapper {
 func (m *Mapper) TypeMap(t reflect.Type) *StructMap {
 	m.mutex.Lock()
 	mapping, ok := m.cache[t]
-	if !ok {
+	flag := false
+	if ok {
+		var indexList []int
+		for _, fieldInfo := range mapping.Names {
+			indexList = append(indexList, fieldInfo.Index...)
+		}
+		sameElem := make(map[int]int)
+		for _, v := range indexList {
+			if _, ok := sameElem[v]; ok {
+				flag = true
+			} else {
+				sameElem[v] = 1
+			}
+		}
+	}
+	if !ok || flag {
 		mapping = getMapping(t, m.tagName, m.mapFunc, m.tagMapFunc)
 		m.cache[t] = mapping
 	}
